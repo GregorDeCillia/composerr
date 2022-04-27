@@ -150,44 +150,156 @@ an error by calling \code{err_h(msg, handler = warning)}
 }
 \examples{
 \dontrun{
-# -- composerr: create new error handler form old one --
-# check if variable 'obj' exists and holds value TRUE
-# original error handler
-err_h <- composerr("Something went wrong")
-if (!exists("obj"))
-  err_h("`obj` does not exist.")
-# Error: Something went wrong: `obj` does not exist.
-obj <- FALSE
-err_h2 <- composerr("`obj` has the wrong value", err_h = err_h)
-if (!obj)
-  err_h2("Value is FALSE.", handler = warning)
-# Warning: Something went wrong: `obj` has the wrong value: Value is FALSE.
-err_h("Old handler is still the same.")
-# Error: Something went wrong: Old handler is still the same.
+#' ### Example-1 ###
+# create new error handler `err_h()` from scratch
+err_h <- composerr(text_1 = "T1", sep_1 = "_", text_2 = "T2", sep_2 = "_")
 
-# -- composerr: update existing error handler --
-# check if variable 'obj' exists and holds value TRUE
-# original error handler
-err_h <- composerr("Something went wrong")
-if (!exists("obj"))
-  err_h("`obj` does not exist.")
-# Error: Something went wrong: `obj` does not exist.
-obj <- FALSE
-composerr_modify("`obj` has the wrong value", err_h = err_h)
-if (!obj)
-  err_h("Value is FALSE.", handler = warning)
-# Warning: Something went wrong: `obj` has the wrong value: Value is FALSE.
+# `err_h` throws errors by default
+err_h("MSG")
+# Error: T1_MSG_T2
 
-# -- accumulate multiple errors --
-err_h <- composerr(text_1 = "Something went wrong", sep_2 = "", text_2 = "Try again!")
-err_h1 <- composerr("Error part", err_h = err_h)
-composerr_halt(err_h1)
-err_h1("First error.")
-err_h1("Second error.")
-composerr_flush(err_h1)
-# Error: Something went wrong:
-#   - Error part: First error.
-#   - Error part: Second error.
-# Try again!
+# With `internal_handler = warning` warnings are sent instead
+err_h("MSG", internal_handler = warning)
+# Warning: T1_MSG_T2
+
+# create a new error handler `err_h2()` based on `err_h()`
+err_h2 <- composerr(
+  err_h, text_1 = "X1", sep_1 = "#", text_2 = "X2", sep_2 = "#",
+  internal_handler = message
+)
+
+# Because of `internal_handler = warning`, `err_h2()` sends
+# plain messages by default
+err_h2("MSG")
+# T1_X1#MSG#X2_T2
+
+# The original error handler `err_h()` remained unchanged
+err_h("MSG")
+# Error: T1_MSG_T2
+
+# Modify an existing error handler without creating a new one
+composerr_modify(
+  err_h, text_1 = "Y1", sep_1 = "-", text_2 = "Y2", sep_2 = "-",
+  internal_handler = warning
+)
+
+# The old error handler `err_h()` has now a different behavior
+err_h("MSG")
+# Warning: T1_Y1-MSG-Y2_T2
+
+# The error handler `err_h2()` enhances the now
+# modified `err_h()` and has hence also changed
+err_h2("MSG")
+# T1_Y1-X1#MSG#X2-Y2_T2
+
+### Example-2 ###
+# create general error handler
+err_h <- composerr(text_1 = "There are problems")
+
+# create a more precise error handler listing the problems
+err_h_detail <- composerr("problem", sep_1 = "-")
+
+# halt `err_h_detail()` processing in order to collect
+# multiple errors
+composerr_halt(err_h_detail)
+err_h_detail("1")
+err_h_detail("2")
+err_h_detail("3")
+composerr_flush(err_h_detail)
+# Error: There are problems:
+#   - problem-1
+#   - problem-2
+#   - problem-3
+
+### Example-3 ###
+# Vector multiplication function with **basic error handling**:
+my_vec_mult <- function(x, y) {
+  # create your error handlers
+  err_h <- composerr("In `my_vec_mult()`")
+  err_h_x <- composerr("Invalid argument `x`", err_h)
+  err_h_x <- composerr("Invalid argument `y`", err_h)
+  if (!is.numeric(x))
+    err_h_x("Not a number.")
+  if (any(is.na(x)))
+    err_h_x("Has missings.", internal_handler = warning)
+  if (!is.numeric(y))
+    err_h_x("Not a number.")
+  if (any(is.na(y)))
+    err_h_x("Has missings.", internal_handler = warning)
+  if (length(x) != length(y))
+    err_h("Vectors `x` and `y` have different length.")
+  sum(x*y, na.rm = TRUE)
+}
+my_vec_mult("a", 1:2)
+# Error: In `my_vec_mult()`: Invalid argument `x`: Not a number.
+my_vec_mult(c(1, NA), 1:2)
+# Warning: In `my_vec_mult()`: Invalid argument `x`: Has missings.
+# 1
+my_vec_mult(1:2, "b")
+# Error: In `my_vec_mult()`: Invalid argument `y`: Not a number.
+my_vec_mult(1:2, c(1, NA))
+# Warning: In `my_vec_mult()`: Invalid argument `y`: Has non-finite values.
+# 1
+my_vec_mult(1:2, 1:3)
+# Error: In `my_vec_mult()`: Vectors `x` and `y` have different length.
+my_vec_mult(1:2, 1:2)
+# 14
+
+### Example-4 ###
+# Advanced implementation of vector multiplication
+# using a validation routine with **advanced error handling**:
+validate_numeric_vec <- function(obj, err_h) {
+  obj_name <- deparse(substitute(obj))
+  err_h <- composerr(paste0("Invalid argument `", obj_name, "`"), err_h)
+  if (!is.numeric(obj))
+    err_h("Not a number.")
+  err_h <- composerr(err_h = err_h)
+  composerr_halt(err_h)
+  for (i in seq_along(obj)) {
+    err_h_item <- composerr(text_1 = paste0("Item-", i), err_h, sep_1 = " is ")
+    if (is.na(obj[i]) && !is.nan(obj[i]))
+      err_h_item("NA.")
+    if (is.nan(obj[i]))
+      err_h_item("NaN.")
+    if (is.infinite(obj[i]))
+      err_h_item("infinite.")
+  }
+  composerr_flush(err_h)
+  invisible(obj)
+}
+my_vec_mult2 <- function(x, y) {
+  err_h <- composerr("In `my_vec_mult2()`")
+  validate_numeric_vec(x, err_h)
+  validate_numeric_vec(y, err_h)
+  if (length(x) != length(y))
+    err_h("Vectors `x` and `y` have different length.")
+  sum(x*y)
+}
+my_vec_mult2("a", 1:4)
+# Error: In `my_vec_mult2()`: Invalid argument `x`: Not a number.
+my_vec_mult2(c(1, NA, NaN, Inf, 5), 1:5)
+# Error: In `my_vec_mult2()`: Invalid argument `x`:
+#   - Item-2 is NA.
+#   - Item-3 is NaN.
+#   - Item-4 is infinite.
+my_vec_mult2(1:5, c(NaN, 2, 3, NA, Inf))
+# Error: In `my_vec_mult2()`: Invalid argument `y`:
+#   - Item-1 is NA.
+#   - Item-4 is NaN.
+#   - Item-5 is infinite.
+my_vec_mult2(1:5, 1:4)
+# Error: In `my_vec_mult2()`: Vectors `x` and `y` have different length.
+my_vec_mult2(1:5, 1:5)
+55
+
+### Example-5 ###
+# Write errors to log file
+err_h <- composerr(
+  "There was a problem",
+  internal_handler = function(msg) {
+    cat(msg, "C:/log.txt", append = TRUE, sep = "\n")
+  }
+)
+err_h("MSG")
 }
 }
