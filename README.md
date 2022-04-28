@@ -9,12 +9,11 @@ commit](https://img.shields.io/github/last-commit/a-maldet/composerr.svg?logo=gi
 bytes](https://img.shields.io/github/languages/code-size/a-maldet/composerr.svg?logo=github)](https://github.com/a-maldet/composerr)
 <!-- badges: end -->
 
-``` r
-library(composerr)
-```
+This **R package** makes it easy to add a **full range and maintainable
+error handling** to your functions and packages, without inflating your
+code.
 
-This R package offers easy to use functions that help implementing a
-professional error handling, which is maintainable.
+> Make error handling in R less tedious
 
 ## Installation
 

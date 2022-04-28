@@ -1,13 +1,13 @@
 Package: composerr
 Type: Package
-Title: Make Error Handling Easy
-Version: 1.0.1
+Title: Make Error Handling In R Less Tedious
+Version: 1.0.2
 Authors@R: c(person("Adrian", "Maldet", email = "a.maldet@posteo.at", role = c("aut", "cre")))
 Maintainers@R: c(person("Adrian", "Maldet", email = "a.maldet@posteo.at", role = c("aut", "cre")))
 Description: 
-    Create meaningful error messages without doing copy/paste.
-    This R package offers easy to use functions that help
-    implementing professional error handling, which is maintainable.
+    This R package makes it easy to add a
+    full range and maintainable error handling
+    to your functions and packages, without inflating your code.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
