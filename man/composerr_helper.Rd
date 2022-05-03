@@ -19,23 +19,24 @@ composerr_helper(
 )
 }
 \arguments{
-\item{text_1}{A character string, which will be appended
+\item{text_1}{Optional string that will be appended
 at the beginning of the error message. The argument \code{sep_1} will be used
 as text separator.}
 
-\item{err_h}{An existing error handling function created with \code{composerr()}.}
+\item{err_h}{Optional error handling function
+to which the message part should be appended.}
 
-\item{text_2}{A character string, which will be appended
+\item{text_2}{Optional string that will be appended
 at the end of the error message. The argument \code{sep_2} will be used
 as text separator.}
 
-\item{sep_1}{A character string that is used as separator for the
+\item{sep_1}{Optional string that is used as separator for the
 concatenation of \code{text_1} at the beginning of the error message.}
 
-\item{sep_2}{A character string that is used as separator for the
+\item{sep_2}{Optional string that is used as separator for the
 concatenation of \code{text_2} at the end of the error message.}
 
-\item{multiflush_start}{An optional string which will be added before
+\item{multiflush_start}{Optional string which will be added before
 a multi-line error stack section, when calling \code{composerr_flush()}.
 This argument only takes effect, if \code{composerr_halt(err_h)} was called
 once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
@@ -50,13 +51,19 @@ a multi-line error stack section, when calling \code{composerr_flush()}.
 This argument only takes effect, if \code{composerr_halt(err_h)} was called
 once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
 
-\item{internal_handler}{An optional error handling function used
-as default value for \code{internal_handler} when calling \code{err_h(msg, internal_handler)}.
-This argument can be used, in order to change the default behavior of the
-error handling to throwing a warning (\code{internal_handler = warning}) or
-some other customized behavior instead of throwing an error, like
+\item{internal_handler}{Optional error handling function used
+as default value for \code{internal_handler}
+when calling \code{err_h(msg, internal_handler = NULL)}.
+This function is passed down the error handler cascade until it
+finally gets called in order to process the incrementally extended error
+message (e.g. throw an error or a warning or do something else with the
+created error message).
+The argument \code{internal_handler} can be used, in order to change the
+default behavior of the error processing to throwing a warning
+(\code{internal_handler = warning}) or
+some other customized behavior like
 writing the error message to a text file
-(\code{internal_handler = function(text) cat(text, FILENAME)}).}
+(\code{internal_handler = function(text) cat(text, file = FILENAME)}).}
 
 \item{new_handler}{A logical value. If set to \code{TRUE}, then a new error
 handling function is created, enhancing the existing error handling
