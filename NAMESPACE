@@ -3,7 +3,6 @@
 export(composerr)
 export(composerr_counterr)
 export(composerr_flush)
-export(composerr_get_internal_handler)
+export(composerr_get_action)
 export(composerr_halt)
-export(composerr_modify)
 export(validate_composerr)

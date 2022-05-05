@@ -2,77 +2,48 @@
 % Please edit documentation in R/composerr.R
 \name{composerr_helper}
 \alias{composerr_helper}
-\title{Helper function for \code{\link[=composerr]{composerr()}} and \code{\link[=composerr_modify]{composerr_modify()}}}
+\title{Helper function for \code{\link[=composerr]{composerr()}}}
 \usage{
-composerr_helper(
-  text_1,
-  err_h,
-  text_2,
-  sep_1,
-  sep_2,
-  multiflush_start,
-  multiflush_prefix,
-  multiflush_end,
-  internal_handler,
-  new_handler,
-  err_h_usage
-)
+composerr_helper(before, err_h, after, collapse, action, err_h_usage)
 }
 \arguments{
-\item{text_1}{Optional string that will be appended
-at the beginning of the error message. The argument \code{sep_1} will be used
-as text separator.}
+\item{before}{Optional string that will be prepended
+to the error message \code{msg}, when the resulting error handler is called.}
 
-\item{err_h}{Optional error handling function
-to which the message part should be appended.}
+\item{err_h}{Optional \strong{parent error handler}. It must either be \code{NULL}
+or a \strong{composerr class object} created with the function \code{\link[=composerr]{composerr()}}.
+If \code{err_h} is omitted, then \code{composerr()} creates a new error handler from
+scratch. Otherwise, the error handler passed to \code{err_h} is used as
+parent error handler for the creation of the new error handler.}
 
-\item{text_2}{Optional string that will be appended
-at the end of the error message. The argument \code{sep_2} will be used
-as text separator.}
+\item{after}{Optional string that will be appended
+to the error message \code{msg}, when the resulting error handler is called.}
 
-\item{sep_1}{Optional string that is used as separator for the
-concatenation of \code{text_1} at the beginning of the error message.}
+\item{collapse}{Optional string that will be used for collapsing the
+resulting error message \code{paste0(before, msg, after)}, when
+the resulting error handler is called. If \code{collapse} is set to
+\code{NULL}, then the resulting error message will not be collapsed, but
+directly be passed on.}
 
-\item{sep_2}{Optional string that is used as separator for the
-concatenation of \code{text_2} at the end of the error message.}
-
-\item{multiflush_start}{Optional string which will be added before
-a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{multiflush_prefix}{An optional string which will be added before
-each line of a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{multiflush_end}{An optional string which will be added after
-a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{internal_handler}{Optional error handling function used
-as default value for \code{internal_handler}
-when calling \code{err_h(msg, internal_handler = NULL)}.
-This function is passed down the error handler cascade until it
-finally gets called in order to process the incrementally extended error
-message (e.g. throw an error or a warning or do something else with the
-created error message).
-The argument \code{internal_handler} can be used, in order to change the
+\item{action}{Optional \strong{default ultimate error handler}. This argument
+can either be \code{NULL} (no default handler defined) or a function
+\verb{function(msg, ...)}. In the latter case this defines a default
+function that will be used as ultimate error handler if the current
+error handler is called without passing an \code{action} argument.
+The used ultimate error handler is passed down the error handler cascade
+until it ultimately will be called in order to process the successively
+extended error message (e.g. throw an error or a warning or do something
+else with the created error message).
+The argument \code{action} can be used, in order to change the
 default behavior of the error processing to throwing a warning
-(\code{internal_handler = warning}) or
+(\code{action = warning}) or
 some other customized behavior like
 writing the error message to a text file
-(\code{internal_handler = function(text) cat(text, file = FILENAME)}).}
-
-\item{new_handler}{A logical value. If set to \code{TRUE}, then a new error
-handling function is created, enhancing the existing error handling
-function \code{err_h()}. If \code{new_handler} set to \code{FALSE}, then the existing
-error handling function \code{err_h()} will be modified.}
+(\code{action = function(msg, ...) cat(msg, file = FILENAME, fill = TRUE)}).}
 
 \item{err_h_usage}{An error handling function for catching
 errors because of improper usage of \code{composerr_helper()}.}
 }
 \description{
-Helper function for \code{\link[=composerr]{composerr()}} and \code{\link[=composerr_modify]{composerr_modify()}}
+Helper function for \code{\link[=composerr]{composerr()}}
 }

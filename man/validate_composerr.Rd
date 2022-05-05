@@ -23,7 +23,7 @@ is calculated by using \strong{non-standard-evaluation} on \code{obj}.}
 Check that \code{obj} is really an error handler created with \code{\link[=composerr]{composerr()}}.
 }
 \seealso{
-\code{\link[=composerr]{composerr()}}, \code{\link[=composerr_modify]{composerr_modify()}}, \code{\link[=composerr_flush]{composerr_flush()}},
-\code{\link[=composerr_halt]{composerr_halt()}}, \code{\link[=composerr_get_internal_handler]{composerr_get_internal_handler()}} and
+\code{\link[=composerr]{composerr()}}, \code{\link[=composerr_flush]{composerr_flush()}},
+\code{\link[=composerr_halt]{composerr_halt()}}, \code{\link[=composerr_get_action]{composerr_get_action()}} and
 \code{\link[=validate_composerr]{validate_composerr()}}
 }

@@ -2,230 +2,224 @@
 % Please edit documentation in R/composerr.R
 \name{composerr}
 \alias{composerr}
-\alias{composerr_modify}
 \title{Compose error handlers (concatenate error messages)}
 \usage{
 composerr(
-  text_1 = NULL,
+  before = NULL,
   err_h = NULL,
-  text_2 = NULL,
-  sep_1 = ": ",
-  sep_2 = NULL,
-  multiflush_start = "",
-  multiflush_prefix = "\\n  - ",
-  multiflush_end = "\\n",
-  internal_handler = NULL
-)
-
-composerr_modify(
-  err_h,
-  text_1 = NULL,
-  text_2 = NULL,
-  sep_1 = NULL,
-  sep_2 = NULL,
-  multiflush_start = NULL,
-  multiflush_prefix = NULL,
-  multiflush_end = NULL,
-  internal_handler = NULL
+  after = NULL,
+  collapse = "\\n",
+  action = NULL
 )
 }
 \arguments{
-\item{text_1}{Optional string that will be appended
-at the beginning of the error message. The argument \code{sep_1} will be used
-as text separator.}
+\item{before}{Optional string that will be prepended
+to the error message \code{msg}, when the resulting error handler is called.}
 
-\item{err_h}{Optional error handling function
-to which the message part should be appended.}
+\item{err_h}{Optional \strong{parent error handler}. It must either be \code{NULL}
+or a \strong{composerr class object} created with the function \code{\link[=composerr]{composerr()}}.
+If \code{err_h} is omitted, then \code{composerr()} creates a new error handler from
+scratch. Otherwise, the error handler passed to \code{err_h} is used as
+parent error handler for the creation of the new error handler.}
 
-\item{text_2}{Optional string that will be appended
-at the end of the error message. The argument \code{sep_2} will be used
-as text separator.}
+\item{after}{Optional string that will be appended
+to the error message \code{msg}, when the resulting error handler is called.}
 
-\item{sep_1}{Optional string that is used as separator for the
-concatenation of \code{text_1} at the beginning of the error message.}
+\item{collapse}{Optional string that will be used for collapsing the
+resulting error message \code{paste0(before, msg, after)}, when
+the resulting error handler is called. If \code{collapse} is set to
+\code{NULL}, then the resulting error message will not be collapsed, but
+directly be passed on.}
 
-\item{sep_2}{Optional string that is used as separator for the
-concatenation of \code{text_2} at the end of the error message.}
-
-\item{multiflush_start}{Optional string which will be added before
-a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{multiflush_prefix}{An optional string which will be added before
-each line of a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{multiflush_end}{An optional string which will be added after
-a multi-line error stack section, when calling \code{composerr_flush()}.
-This argument only takes effect, if \code{composerr_halt(err_h)} was called
-once, then at least two times \code{err_h()} and then \code{composerr_flush(err_h)}.}
-
-\item{internal_handler}{Optional error handling function used
-as default value for \code{internal_handler}
-when calling \code{err_h(msg, internal_handler = NULL)}.
-This function is passed down the error handler cascade until it
-finally gets called in order to process the incrementally extended error
-message (e.g. throw an error or a warning or do something else with the
-created error message).
-The argument \code{internal_handler} can be used, in order to change the
+\item{action}{Optional \strong{default ultimate error handler}. This argument
+can either be \code{NULL} (no default handler defined) or a function
+\verb{function(msg, ...)}. In the latter case this defines a default
+function that will be used as ultimate error handler if the current
+error handler is called without passing an \code{action} argument.
+The used ultimate error handler is passed down the error handler cascade
+until it ultimately will be called in order to process the successively
+extended error message (e.g. throw an error or a warning or do something
+else with the created error message).
+The argument \code{action} can be used, in order to change the
 default behavior of the error processing to throwing a warning
-(\code{internal_handler = warning}) or
+(\code{action = warning}) or
 some other customized behavior like
 writing the error message to a text file
-(\code{internal_handler = function(text) cat(text, file = FILENAME)}).}
+(\code{action = function(msg, ...) cat(msg, file = FILENAME, fill = TRUE)}).}
 }
 \value{
-The call \code{composerr_modify(err_h_old)} silently returns
-the modified error handler \code{err_h_old}, but since
-\code{composerr_modify(err_h_old)}
-does not create a new error handler, but merely modifies \code{err_h_old},
-there is no need to reassign \code{err_h_old <- composerr_modify(err_h_old)}.
-
 The call \code{composerr(...)} always returns a new error handler, either
-created from scratch or enhancing another error handler \code{err_h_old}.
+created from scratch or enhancing a parent error handler \code{err_h_parent}.
 The resulting error handler is a function with the following arguments:
 \itemize{
 \item \code{msg}: An optional string holding the error message. This error
 message will be passed down the error handler cascade and get recursively
 concatenated with additional message parts.
-\item \code{internal_handler}: An optional error processing function
+\item \code{action}: An optional ultimate error processing function
 (\verb{function(msg = NULL, ...)}), which
 will be passed down the error handler cascade and ultimately be executed.
-\item \code{...}: Additional arguments passed down the error handler cascade and
-ultimately passed to the called \code{internal_handler}.
+\item \code{...}: Additional argument, which will be passed down the error handler
+cascade and ultimately passed to \code{action(msg_full, ...)}.
 }
 }
 \description{
-The following functions allow the creation/modification of
-\strong{error handlers} and incremental creation of complex error messages
-holding precise information \strong{where and why} the problem emerged
-(in the following \code{...} stands for
-the arguments \verb{text_*}, \verb{sep_*}, \verb{multiflush_*} or \code{internal_handler}):
+\code{composerr()} is used in order to create so called \strong{error or warning handlers}.
+These are mere functions, which have a character argument \code{msg} and maybe
+additional arguments \code{...} and which process this
+arguments (e.g. call \code{stop(msg)}).
+Often error handling and especially the creation of meaningful error
+messages takes a lot of time and often leads to a great amount of duplicate
+code, which is often not easy to maintain.
+\code{composerr()} offers an easy way out, since it simplifies the creation
+of error handlers with meaningful error messages, by incrementally concatenating
+more detailed message parts to your error handlers.
+The call of \code{composerr()} does two different things, depending on whether
+the argument \code{err_h} is used or not (in the following \code{...} stands for
+the arguments \code{before}, \code{after}, \code{collapse}, and \code{action}):
 \itemize{
 \item \code{composerr(...)}: Create a new error handling function from scratch.
-\item \code{composerr(..., err_h = err_h_old)}: Create a new error handling
-function, which enhances the existing error handler \code{err_h_old}.
-This can be useful in order to extend the error message parts in \code{err_h_old}
-by adding additional message parts (by the text parts
-\code{text_1}, \code{sep_1}, \code{text_2}, \code{sep_2}, \code{multiflush_prefix},
-\code{multiflush_start} and \code{multiflush_end} defined in \code{...}).
-\item \code{composerr_modify(..., err_h = err_h_old)}:
-Does not create a new error handling function, but modifies an
-existing error handler \code{err_h_old}. With this function you can add new
-message parts to an existing error handler or change its default behavior
-(like throwing a warning instead of an error etc.).
-\strong{CAUTION}: This function modifies the \strong{original} error handling object
-\code{err_h_old} (\strong{by reference}).
+This error handling function is returned by the call \code{composerr(...)}.
+\item \code{composerr(..., err_h = err_h_parent)}: Create a new (\strong{child}) error handling
+function from another (\strong{parent}) error handling function \code{err_h_parent}.
+This new error handling function enhances \code{err_h_parent} by adding
+additional message parts to the message parts defined in \code{err_h_parent}.
+The function \code{composerr} returns special \strong{composerr class objects},
+which are functions with the following structure
+\verb{function(msg, action = NULL, ...)}. The following arguments are available:
+\item \code{msg}: A character vector passed to the error handler, holding information
+about one or multiple errors.
+\item \code{action}: A so called \strong{ultimate error handler}. This is a
+function with the following structure \verb{function(msg, ...)}.
+The ultimate error handler processes the error message after it was
+fully enriched by all message
+parts defined in the so called \strong{error handler cascade}.
+\item \code{...}: Additional arguments passed down the error handler cascade and then
+passed to the ultimate error handler defined in \code{action}.
 }
 }
 \section{Cascading error handlers}{
 
-If \code{err_h1 <- composerr(...)} was created without passing another
+If \code{err_h_new <- composerr(...)} was created without passing a parent
 error handler to the optional argument \code{err_h}, then
-\code{err_h1} is a newly created error handler with the following structure
-\verb{err_h1 = function(msg = NULL, internal_handler = NULL, ...)}.
-Similarly, if \code{err_h1 <- composerr(err_h = err_h_old, ...)} was created
-by passing \code{err_h = err_h_old}, then \code{err_h1} is also
-a new error handler, which also has the structure
-\verb{err_h1 = function(msg = NULL, internal_handler = NULL, ...)}, but
-now it was created from another error handler \code{err_h_old}.
+\code{err_h_new} is a newly created error handler with the following structure
+\verb{err_h_new = function(msg = NULL, action = NULL, ...)}.
+Similarly, if \code{err_h_new <- composerr(err_h = err_h_parent, ...)} was created
+by passing a parent error handler \code{err_h = err_h_parent},
+then \code{err_h_new} is also a new error handler, which also has the structure
+\verb{err_h_new = function(msg = NULL, action = NULL, ...)}, but
+now it was created from a parent error handler \code{err_h_parent}.
 
 We now consider the latter case
-\code{err_h1 <- composerr(text_1, err_h_old, text_2, sep_1, sep_2, internal_handler = internal_handler_1)}.
+\code{err_h_new <- composerr(before, err_h_parent, after, action = action_default)}.
 If the error handler gets executed with the following call
-\code{err_h1(msg, internal_handler = internal_handler_2, ...)},
-then the following things happen:
+\code{err_h_new(msg, action = action_1, ...)},
+then the following things will happen:
 \itemize{
-\item \code{err_h1} first creates a more detailed message
-\code{msg_new = text_1+sep_1+msg+sep_2+text_2} (here \code{+} stands for string concatenation.)
-\item if no argument \code{internal_handler} was passed to \code{err_h1},
-then \code{internal_handler} is set to the default handler
-(in this example \code{internal_handler_1}) previously assigned to \code{err_h1}.
-If no default handler was previously assigned to \code{err_1},
-then \code{internal_handler <- NULL}.
-\item \code{err_h1} calls \code{err_h_old(msg_new, internal_handler = internal_handler, ...)}.
+\item if the argument \code{collapse} in \code{composerr(...)} was set to a string, then
+\code{err_h_new} will first create a more detailed message, by first adding the
+text parts defined in the arguments \code{before} and \code{after} and then
+collapsing the created character vector using the string in \code{collapse}
+as separator
+\code{msg_new <- paste(paste0(before, msg, after), collapse = collapse)}
+\item if the argument \code{collapse} in \code{composerr(...)} was omitted or set to \code{NULL},
+then \code{err_h_new} will first create a more detailed message, by first adding the
+text parts defined in the arguments \code{before} and \code{after}, but without
+collapsing the resulting vector:
+\code{msg_new <- paste0(before, msg, after)}
+\item if no argument \code{action} is passed to \code{err_h_new}
+(in this example \code{action_1 = NULL}),
+then \code{action} will be set to the default ultimate handler
+(in this example \code{action_default}) previously assigned to \code{err_h_new}
+with the argument \code{action}.
+If no default ultimate handler was previously assigned to \code{err_h_new},
+then \code{action} will be set to \code{NULL}.
+\item Finally, \code{err_h_new} will call \code{err_h_parent(msg_new, action = action, ...)}
 }
 
-Now \code{err_h_old} is called and is running through the same process.
-We therefore have a \strong{cascade of repeated error handler calls}, passing
-down
+Since \code{err_h_parent} is called at the end and \code{err_h_parent} will run through
+the same process, maybe calling its parent error handler, we have a
+so called \strong{cascade of successive error handler calls}.
+The following arguments are passed down this error handler cascade:
 \itemize{
 \item a successively growing error message \code{msg} (incrementally adding text parts
 in front and at the end of the message).
-\item the argument \code{internal_handler}, which can
-either be \code{NULL} or a function used for final processing of the created
+\item the argument \code{action}, which can
+either be \code{NULL} or an ultimate error handling function
+used for ultimate processing of the created
 error message (throw an error or a warning or do something else).
-If the passed down \code{internal_handler} argument is \code{NULL} and at some
-point in the error handling cascade there is a non-null
-default internal handler that was assigned to some error handler
-in the error handler cascade, then this default internal handler is
-passed down as \code{internal_handler} instead. Once the \code{internal_handler}
-is non-null, it will remain unchanged, no matter if there were other
-default handlers assigned to error handler inside the error handler
-cascade.
-\item additional arguments \code{...} passed to \code{err_h1} are directly passed down
-the error handler cascade and get directly passed to the ultimate call
-of the internal error processing function \code{internal_handler(msg_final, ...)}.
+If the passed down \code{action} argument is \code{NULL} and at some
+point in the error handling cascade there was a non-null
+default ultimate error handler assigned to some error handler
+in the error handler cascade, then this default ultimate error handler is
+passed on instead as argument \code{action}. Once the ultimate error handler
+\code{action} is not \code{NULL} any more, it will remain unchanged, no matter if
+there were other default ultimate error handlers assigned to other error
+handlers in the error handler cascade. This means the default ultimate
+error handlers of the child error handlers overwrite the default ultimate
+error handlers of its ancestor error handlers.
+\item additional arguments \code{...} passed to the call
+\code{err_h_new(msg, action, ...)} will be directly passed down
+the error handler cascade and directly passed to the ultimate call
+of the ultimate error handler \code{action(msg_complete, ...)}.
 }
 
-After cascading backwards the error handlers, we ultimately reach the
+After cascading backwards the ancestry of \code{err_h_new}, we ultimately reach the
 primal error handler, which was created first
-(from scratch) and not from another error handler.
+(from scratch) and has no further parent error handler.
 Let us call it \code{err_h_primal}.
-This primal error handler does the following things:
+This primal error handler will do the following things:
 \itemize{
-\item As usual \code{err_h_primal} concatenates its additional text parts to the
-passed in message. This gives us at last the final version of the error
-message. Let us call it \code{msg_final}.
-\item As usual \code{err_h_primal} checks if \code{internal_handler} is \code{NULL}.
-If so, \code{internal_handler} is set to the default handler that was assigned
+\item As usual \code{err_h_primal} will concatenate its additional text parts
+\code{before} and \code{after} to the
+passed in message. Also it will maybe collapse the resulting character
+vector, depending if \code{collapse} was set to \code{NULL} or not.
+This will give us at last the ultimate version of the error
+message. Let us call it \code{msg_complete}.
+\item As usual \code{err_h_primal} checks if \code{action} is \code{NULL}.
+If so, \code{action} is set to the default handler that was assigned
 to \code{err_h_primal}.
-\item If the \code{internal_handler} is still \code{NULL}, then \code{internal_handler} is
+\item If the \code{action} is still \code{NULL}, then \code{action} is
 replaced by the \code{\link[=stop]{stop()}} function.
-\item Ultimately \code{err_h_primal} calls \code{internal_handler(msg_final, ...)}.
+\item Ultimately \code{err_h_primal} calls \code{action(msg_complete, ...)}.
 }
 
-The result of the final call \code{internal_handler(msg_final, ...)} is silently
-returned by \code{err_h1}.
+The result of the final call \code{action(msg_complete, ...)} is silently
+returned by \code{err_h_new}.
 }
 
 \section{Stacked error messages}{
 
-Let us assume \code{composerr_halt(err_h1)} was called before calling
-\code{err_h1(msg, ...)}.
-In this case the error message will not be cascaded down and \code{internal_handler}
-will not get called.
-Instead \code{err_h1} will do the following things:
+Let us assume \code{composerr_halt(err_h_new)} was called before calling
+\code{err_h_new(msg, ...)}.
+In this case the error message will not be cascaded down and \code{action}
+will not be called.
+Instead \code{err_h_new} will do the following things:
 \itemize{
-\item As usual \code{err_h1} will append the additional message parts:
-\code{msg_new <- text_1+sep_1+msg+sep_2+text_2}
-\item \code{err_h1} will add the resulting error message \code{msg_new} to an internal
-error stack of \code{err_h1}.
-\item \code{err_h1} will return the value \code{NULL}
+\item As usual \code{err_h_new} will concatenate the additional message parts:
+\code{msg_new <- paste0(before, msg, after)}
+\item \code{err_h_new} will append the resulting error message \code{msg_new} to an internal
+error stack of \code{err_h_new}. \code{err_stack <- c(err_stack, msg_new)}
+\item \code{err_h_new} will return the value \code{NULL}
 }
 
 If later on, the function
-\code{composerr_flush(err_h1, internal_handler = internal_handler4, ...)} is
+\code{composerr_flush(err_h_new, action = action4, ...)} is
 called, then the error handler cascade will be executed as usual, but first
-the error messages stored in the error stack of \code{err_h1} will be collapsed
-into a single error message and this summed up error message will be passed
-down the error handler cascade as usual.
-In short, the call
-\code{composerr_flush(err_h1, internal_handler = internal_handler4, ...)}
-will do the following things:
+\code{err_h_new} will do the following things:
 \itemize{
-\item All error messages stored in the internal error stack of \code{err_h1} will
-be concatenated into a single string by adding the strings \code{multiflush_prefix}
-in front of each stack entry and then collapsing the message stack into a
-single string and then
-adding \code{multiflush_start} in front and \code{multiflush_end} at the end this
-message string:
-\code{msg_new <- multiflush_start+collapse(multiflush_prefix+stack)+multiflush_end}
-\item As usual, if \code{internal_handler} is \code{NULL}, then it will be replaced by
-the default internal handler assigned to \code{err_h1}.
-\item \code{err_h_old(msg_new, internal_handler = internal_handler)} will be called and
+\item If \code{collapse != NULL} was assigned to \code{err_h_new}, then the entire
+internal error stack (a character vector holding the stored error messages),
+will be collapsed to a single string:
+\code{msg_new <- paste(err_stack, collapse = collapse)}.
+\item If \code{collapse == NULL} was omitted when calling \code{err_h_new <- composerr(...)},
+then the internal error stack (a character vector holding the stored error
+messages) of \code{err_h_new} will be used as \code{msg_new},
+without collapsing it first.
+\item As usual, if the argument \code{action = action4} is \code{NULL},
+then it will be replaced by
+the default ultimate handler assigned to \code{err_h_new} (in this example
+\code{action_default}).
+\item \code{err_h_parent(msg_new, action = action)} will be called and
 the error handler cascade will continue as usual.
 }
 
@@ -233,13 +227,13 @@ It is also possible to halt the error execution in the
 \strong{middle of the error handler cascade}, by calling
 \code{composerr_halt(err_h_middle)},
 where \code{err_h_middle} is an error handler, that has at least one child
-error handler \code{err_h1} (an error handler that was created from \code{err_h_middle}).
-If \code{err_h1} or a child error handler of \code{err_h1} gets called,
+error handler \code{err_h_new}.
+If \code{err_h_new} or another offspring error handler of \code{err_h_new} gets called,
 then the error handling will be cascaded down as usual until it reaches
-\code{err_h_middle}. There it will halted and the created message will be stacked
-in the internal error message stack of \code{err_h_middle}.
+\code{err_h_middle}. There it will be halted and the created message will appended
+to the internal error message stack of \code{err_h_middle}.
 Only by calling \code{composerr_flush(err_h_middle)} the
-error handling cascade can be continued.
+error handling cascade will be continued.
 
 It is also possible to halt the error execution at
 \strong{multiple points of the error handler cascade}. In order to cascade
@@ -249,82 +243,74 @@ the errors down till the end, each halted error handler must be flushed with
 
 \examples{
 \dontrun{
-#' ##### Example-1: Create child error handlers and modify existing handlers #####
+#' ##### Example-1: Create error handlers #####
 # create new error handler `err_h1()` from scratch
-err_h1 <- composerr(text_1 = "T1", sep_1 = "_", text_2 = "T2", sep_2 = "_")
+err_h1 <- composerr(before = "B1", after = "A1")
 
 # `err_h1` throws errors by default
-err_h1("MSG")
-# Error: T1_MSG_T2
+err_h1("XXX")
+# Error: B1XXXA1
 
-# With `internal_handler = warning` a warning will be sent instead
-err_h1("MSG", internal_handler = warning)
-# Warning: T1_MSG_T2
+# also a vector can be used as message
+err_h1(c("XXX", "YYY"))
+# Error: B1XXXA1
+# B1YYYA1
+
+# With `action = warning` a warning will be sent instead
+err_h1("XXX", action = warning)
+# Warning: B1XXXA1
 
 # create a new error handler `err_h2` based on `err_h1`
 err_h2 <- composerr(
-  err_h = err_h1, text_1 = "X1", sep_1 = "#", text_2 = "X2", sep_2 = "#",
-  internal_handler = message
+  err_h = err_h1,
+  before = "B2",
+  after = "A2",
+  action = message
 )
 
-# Because of `internal_handler = message`, the handler `err_h2` will print
+# Because of `action = message`, the handler `err_h2` will print
 # plain messages by default
-err_h2("MSG")
-# T1_X1#MSG#X2_T2
+err_h2("XXX")
+# B1B2XXXA2A1
 
 # The original error handler `err_h1` remained unchanged
-err_h1("MSG")
-# Error: T1_MSG_T2
-
-# Modify an existing error handler without creating a new one
-composerr_modify(
-  err_h = err_h1, text_1 = "Y1", sep_1 = "-", text_2 = "Y2", sep_2 = "-",
-  internal_handler = warning
-)
-
-# The old error handler `err_h1` has now a different default behavior
-err_h1("MSG")
-# Warning: T1_Y1-MSG-Y2_T2
-
-# The error handler `err_h2` enhances the now
-# modified `err_h1` and has hence also changed
-err_h2("MSG")
-# T1_Y1-X1#MSG#X2-Y2_T2
+err_h1("XXX")
+# Error: B1XXXA1
 
 ##### Example-2: Halt/Flush errors #####
 # create general error handler
-err_h1 <- composerr(text_1 = "There are problems")
+err_h_parent <- composerr(before = "There are problems:\n")
 
 # create a more precise error handler listing the problems
-err_h_detail <- composerr("problem", sep_1 = "-", err_h = err_h1)
+err_h_child <- composerr("  - problem-", err_h = err_h_parent)
 
-# halt `err_h_detail()` processing in order to collect
-# multiple errors
-composerr_halt(err_h_detail)
-err_h_detail("1")
-err_h_detail("2")
-err_h_detail("3")
+# halt `err_h_child` processing in order to collect multiple errors
+composerr_halt(err_h_child)
+err_h_detail(1)
+err_h_detail(2:3)
+err_h_detail(4)
 
-composerr_flush(err_h_detail)
+composerr_flush(err_h_child)
 # Error: There are problems:
 #   - problem-1
 #   - problem-2
 #   - problem-3
+#   - problem-4
 
 ##### Example-3: Error/Warning handling in functions #####
 my_vec_mult <- function(x, y) {
   # create your error handlers
-  err_h <- composerr("In `my_vec_mult()`")
-  err_h_x <- composerr("Invalid argument `x`", err_h)
-  err_h_y <- composerr("Invalid argument `y`", err_h)
+  err_h <- composerr("In `my_vec_mult()`: ")
+  err_h_x <- composerr("Invalid argument `x`: ", err_h)
+  err_h_y <- composerr("Invalid argument `y`: ", err_h)
   if (!is.numeric(x))
     err_h_x("Not a number.")
   if (any(is.na(x)))
-    err_h_x("Has missings.", internal_handler = warning)
+    err_h_x("Has missings.", action = warning)
   if (!is.numeric(y))
     err_h_y("Not a number.")
   if (any(is.na(y)))
-    err_h_y("Has missings.", internal_handler = warning)
+    err_h_y("Has missings.", action = warning)
   if (length(x) != length(y))
     err_h("Vectors `x` and `y` have different length.")
   sum(x*y, na.rm = TRUE)
@@ -353,13 +339,13 @@ my_vec_mult(1:2, 1:2)
 ##### Example-4: Error handling in sub routines #####
 validate_numeric_vec <- function(obj, err_h) {
   obj_name <- deparse(substitute(obj))
-  err_h <- composerr(paste0("Invalid argument `", obj_name, "`"), err_h)
+  err_h <- composerr(paste0("Invalid argument `", obj_name, "`: "), err_h)
   if (!is.numeric(obj))
     err_h("Not a number.")
-  err_h <- composerr(err_h = err_h)
-  composerr_halt(err_h)
+  err_h_list <- composerr(err_h = composerr("\n", err_h))
+  composerr_halt(err_h_list)
   for (i in seq_along(obj)) {
-    err_h_item <- composerr(text_1 = paste0("Item-", i), err_h, sep_1 = " is ")
+    err_h_item <- composerr(paste0("  - Item-", i, " is "), err_h_list)
     if (is.na(obj[i]) && !is.nan(obj[i]))
       err_h_item("NA.")
     if (is.nan(obj[i]))
@@ -367,12 +353,12 @@ validate_numeric_vec <- function(obj, err_h) {
     if (is.infinite(obj[i]))
       err_h_item("infinite.")
   }
-  composerr_flush(err_h)
+  composerr_flush(err_h_list)
   invisible(obj)
 }
 
 my_vec_mult2 <- function(x, y) {
-  err_h <- composerr("In `my_vec_mult2()`")
+  err_h <- composerr("In `my_vec_mult2()`: ")
   validate_numeric_vec(x, err_h)
   validate_numeric_vec(y, err_h)
   if (length(x) != length(y))
@@ -404,20 +390,24 @@ my_vec_mult2(1:5, 1:5)
 ##### Example-5: Write errors to log file #####
 logfile = tempfile()
 err_h <- composerr(
-  "There was a problem",
-  internal_handler = function(msg) {
+  "There was a problem: ",
+  action = function(msg) {
     cat(msg, file = logfile, append = TRUE, fill = TRUE)
   }
 )
-err_h("MSG")
+err_h("I am hungry.")
+err_h("The fridge is empty.")
+cat(paste(readLines(logfile), collapse = "\n"))
+# There was a problem: I am hungry.
+# There was a problem: The fridge is empty.
 
 ##### Example-6: Optionally suppressing warnings #####
 my_sum <- function(x, suppress_warnings = FALSE) {
   if (isFALSE(suppress_warnings)) {
-    err_h <- composerr("Problem in `my_sum()`", internal_handler = warning)
+    err_h <- composerr("Problem in `my_sum()`: ", action = warning)
   } else {
-    # internal handler does nothing
-    err_h <- composerr(internal_handler = function(...) {})
+    # ultimate error handler does nothing
+    err_h <- composerr(action = function(...) {})
   }
   if (any(is.na(x)))
     err_h("`x` has missing values.")
@@ -434,5 +424,5 @@ my_sum(c(1, 2, NA), suppress_warnings = TRUE)
 }
 \seealso{
 \code{\link[=composerr_flush]{composerr_flush()}}, \code{\link[=composerr_halt]{composerr_halt()}}, \code{\link[=composerr_counterr]{composerr_counterr()}},
-\code{\link[=composerr_get_internal_handler]{composerr_get_internal_handler()}} and \code{\link[=validate_composerr]{validate_composerr()}}
+\code{\link[=composerr_get_action]{composerr_get_action()}} and \code{\link[=validate_composerr]{validate_composerr()}}
 }

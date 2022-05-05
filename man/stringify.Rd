@@ -6,10 +6,10 @@
 \usage{
 stringify(
   x,
-  str_collapse = ", ",
-  str_quote = "'",
-  str_before = "",
-  str_after = "",
+  before = NULL,
+  after = NULL,
+  collapse = ", ",
+  quote = "'",
   new_line = FALSE
 )
 }
@@ -17,14 +17,14 @@ stringify(
 \item{x}{An object, which should be turned into a string. Usually an atomic
 object (a vector).}
 
-\item{str_collapse}{A string, used for separating each vector entry.}
+\item{before}{A string placed before each vector entry.}
 
-\item{str_quote}{A string, holding  the symbol which should be used for quoting
+\item{after}{A string placed after each vector entry.}
+
+\item{collapse}{A string, used for separating each vector entry.}
+
+\item{quote}{A string, holding  the symbol which should be used for quoting
 every entry of \code{x}. Default is \verb{'} which gives the result \code{'entry1'}.}
-
-\item{str_before}{A string placed before each vector entry.}
-
-\item{str_after}{A string placed after each vector entry.}
 
 \item{new_line}{A logical. If set to \code{TRUE}, then a new line command is
 placed at the end of the resulting string.}
