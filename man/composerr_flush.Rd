@@ -35,6 +35,11 @@ writing the error message to a text file
 cascade and ultimately be passed to the ultimate error handler
 \code{action(msg_full, ...)}.}
 }
+\value{
+\code{composerr_halt()} silently returns the passed in error handler
+\code{err_h} and \code{composerr_flush()} silently returns the return value of
+the ultimate error handler \code{action}.
+}
 \description{
 The following functions allow the accumulation of multiple errors
 in an internal error stack of an error handler \code{err_h} and flushing them

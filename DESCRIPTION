@@ -1,7 +1,7 @@
 Package: composerr
 Type: Package
 Title: Make Error Handling In R Less Tedious
-Version: 2.0.0
+Version: 2.0.1
 Authors@R: c(person("Adrian", "Maldet", email = "a.maldet@posteo.at", role = c("aut", "cre")))
 Maintainers@R: c(person("Adrian", "Maldet", email = "a.maldet@posteo.at", role = c("aut", "cre")))
 Description: 

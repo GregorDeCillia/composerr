@@ -579,6 +579,9 @@ composerr_helper <- function(
 #' @inheritSection composerr Stacked error messages
 #' @param err_h An error handler created with [composerr()]
 #' @inheritParams composerr
+#' @return `composerr_halt()` silently returns the passed in error handler
+#'   `err_h` and `composerr_flush()` silently returns the return value of
+#'   the ultimate error handler `action`.
 #' @seealso [composerr()],
 #'   [composerr_get_action()] and [validate_composerr()]
 #' @examples 
@@ -661,6 +664,7 @@ composerr_halt <- function(err_h) {
   )
   # composerr_halt
   get("halt", envir = environment(err_h))()
+  invisible(err_h)
 }
 
 #' @param ... Additional arguments, which will be passed down the error handler
