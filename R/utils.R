@@ -10,8 +10,11 @@
 #' @param collapse A string, used for separating each vector entry.
 #' @param before A string placed before each vector entry.
 #' @param after A string placed after each vector entry.
-#' @param new_line A logical. If set to `TRUE`, then a new line command is
-#'    placed at the end of the resulting string.
+#' @param n_max A positive integer or `Inf`, defining the maximum number of
+#'   displayed vector elements. All further elements are displayed with the
+#'   text defined in `further`.
+#' @param further A string indicating further (after `n_max` displayed elements)
+#'   vector elements.
 #' @return A string showing the entries of the vector.
 stringify <- function(
   x,
@@ -19,7 +22,8 @@ stringify <- function(
   after = NULL,
   collapse = ", ",
   quote = "'",
-  new_line = FALSE
+  n_max = 10,
+  further = "..."
 ) {
   err_h <- function(msg)
     stop(paste("Error while calling `stringify()`:", msg), call. = FALSE)
@@ -39,18 +43,25 @@ stringify <- function(
     !is.character(after) || length(after) != 1 || is.na(after)
   ))
     err_h("Argument `after` must be a non-missing string value or `NULL`.")
-  if (!is.logical(new_line) || length(new_line) != 1 || is.na(new_line))
-    err_h("Argument `new_line` must be a non-missing logical value.")
+  if (!is.numeric(n_max) || length(n_max) != 1 || is.na(n_max) || n_max < 1 ||
+      (is.finite(n_max) && as.integer(n_max) != n_max)
+  )
+    err_h("Argument `n_max` be a positive integer value or `Inf`.")
+  if (!is.character(further) || length(further) != 1 || is.na(further))
+    err_h("Argument `further` must be a non-missing string value.")
   # stringify
   x <- tryCatch(
     as.character(x),
     error = function(e) err_h(paste0(
       "Argument `x` could not be converted into a character vector:\n", e))
   )
+  add_dots <- length(x) > n_max
+  if (length(x) > n_max)
+    x <- x[1:n_max]
   if (!is.null(quote))
-    x <- paste0(quote, x, quote)
-  x <- paste(paste0(before, x, after), collapse = collapse)
-  if (isTRUE(new_line))
-    x <- paste0(x, "\n")
-  x
+    x <- c(
+      paste0(quote, x, quote),
+      if (add_dots) further else NULL
+    )
+  paste(paste0(before, x, after), collapse = collapse)
 }

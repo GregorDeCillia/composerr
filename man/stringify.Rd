@@ -10,7 +10,8 @@ stringify(
   after = NULL,
   collapse = ", ",
   quote = "'",
-  new_line = FALSE
+  n_max = 10,
+  further = "..."
 )
 }
 \arguments{
@@ -26,8 +27,12 @@ object (a vector).}
 \item{quote}{A string, holding  the symbol which should be used for quoting
 every entry of \code{x}. Default is \verb{'} which gives the result \code{'entry1'}.}
 
-\item{new_line}{A logical. If set to \code{TRUE}, then a new line command is
-placed at the end of the resulting string.}
+\item{n_max}{A positive integer or \code{Inf}, defining the maximum number of
+displayed vector elements. All further elements are displayed with the
+text defined in \code{further}.}
+
+\item{further}{A string indicating further (after \code{n_max} displayed elements)
+vector elements.}
 }
 \value{
 A string showing the entries of the vector.
