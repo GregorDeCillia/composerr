@@ -1,6 +1,3 @@
-#' @include closure.R
-NULL
-
 #' Compose error handlers (concatenate error messages)
 #'
 #' `composerr()` is used in order to create so called **error or warning handlers**.
@@ -441,7 +438,7 @@ composerr_helper <- function(
   if (is.null(err_h) && is.null(action))
     action <- stop
   if(identical(action, stop) || identical(action, warning))
-    action <- restrict_fn_env(
+    action <- funky::restrict_fn_env(
       fn = function(msg, ...) {
         do.call(
           action,
@@ -456,7 +453,7 @@ composerr_helper <- function(
       },
       vars = "action"
     )
-  err_h <- eval_closure(
+  err_h <- funky::eval_closure(
     expr = {
       assigned_before <- NULL
       assigned_after <- NULL
@@ -499,7 +496,7 @@ composerr_helper <- function(
           if (is.null(action))
             action <- stop
           if(identical(action, stop) || identical(action, warning))
-            action <- restrict_fn_env(
+            action <- funky::restrict_fn_env(
               fn = function(msg, ...) {
                 do.call(
                   action,
