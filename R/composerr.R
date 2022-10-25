@@ -451,7 +451,8 @@ composerr_helper <- function(
           )
         )
       },
-      vars = "action"
+      vars = "action",
+      parent_env = "composerr"
     )
   err_h <- funky::eval_closure(
     expr = {
@@ -509,7 +510,8 @@ composerr_helper <- function(
                   )
                 )
               },
-              vars = "action"
+              vars = "action",
+              parent_env = "composerr"
             )
           action(full_msg, ...)
         }
@@ -544,7 +546,8 @@ composerr_helper <- function(
         }
       }
     },
-    vars = "err_h"
+    vars = "err_h",
+    parent_env = "composerr"
   )
   class(err_h) <- "composerr"
   # update (old or new) handler

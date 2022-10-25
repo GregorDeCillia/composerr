@@ -25,6 +25,7 @@ to your functions and packages, without inflating your code.
 
 ```{r}
 # Install development version from GitHub
+devtools::install_github('a-maldet/funky', build_opts = NULL)
 devtools::install_github('a-maldet/composerr', build_opts = NULL)
 ```
 
