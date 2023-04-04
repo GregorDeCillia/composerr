@@ -22,6 +22,7 @@ Suggests:
     roxygen2 (>= 7.1.1),
     knitr,
     rmarkdown
+Remotes: a-maldet/funky
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
